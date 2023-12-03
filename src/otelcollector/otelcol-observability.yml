@@ -11,12 +11,10 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
     enable_open_metrics: true
-  otlphttp/jestotel:
-    endpoint: http://host.docker.internal:4123
 
 service:
   pipelines:
     traces:
-      exporters: [otlp, logging, spanmetrics, otlphttp/jestotel]
+      exporters: [otlp, logging, spanmetrics]
     metrics:
       exporters: [prometheus, logging]
