@@ -10,7 +10,8 @@ import java.time.Duration.ofMillis
 import java.util.Properties
 import kotlin.system.exitProcess
 
-const val topic = "orders"
+// Topic name changed to make the service never run afther the Checkout flow.
+const val topic = "orders2"
 const val groupID = "frauddetectionservice"
 
 fun main() {

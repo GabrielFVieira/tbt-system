@@ -37,19 +37,23 @@ first_run = True
 
 class RecommendationService(demo_pb2_grpc.RecommendationServiceServicer):
     def ListRecommendations(self, request, context):
-        prod_list = get_product_list(request.product_ids)
-        span = trace.get_current_span()
-        span.set_attribute("app.products_recommended.count", len(prod_list))
-        logger.info(f"Receive ListRecommendations for product ids:{prod_list}")
+        # Changed method to make the service always return an error when called.
 
-        # build and return response
-        response = demo_pb2.ListRecommendationsResponse()
-        response.product_ids.extend(prod_list)
+        # prod_list = get_product_list(request.product_ids)
+        # span = trace.get_current_span()
+        # span.set_attribute("app.products_recommended.count", len(prod_list))
+        # logger.info(f"Receive ListRecommendations for product ids:{prod_list}")
 
-        # Collect metrics for this service
-        rec_svc_metrics["app_recommendations_counter"].add(len(prod_list), {'recommendation.type': 'catalog'})
+        # # build and return response
+        # response = demo_pb2.ListRecommendationsResponse()
+        # response.product_ids.extend(prod_list)
 
-        return response
+        # # Collect metrics for this service
+        # rec_svc_metrics["app_recommendations_counter"].add(len(prod_list), {'recommendation.type': 'catalog'})
+
+
+        context.set_code(grpc.StatusCode.UNKNOWN)
+        return demo_pb2.ListRecommendationsResponse()
 
     def Check(self, request, context):
         return health_pb2.HealthCheckResponse(

@@ -252,7 +252,9 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	shippingTrackingAttribute := attribute.String("app.shipping.tracking.id", shippingTrackingID)
 	span.AddEvent("shipped", trace.WithAttributes(shippingTrackingAttribute))
 
-	_ = cs.emptyUserCart(ctx, req.UserId)
+	// Call ommited to simulate a bug on the application, where the call to CartService/EmptyCart is never made.
+	// This will make the system return a success response but the cart will always have items.
+	// _ = cs.emptyUserCart(ctx, req.UserId)
 
 	orderResult := &pb.OrderResult{
 		OrderId:            orderID.String(),
