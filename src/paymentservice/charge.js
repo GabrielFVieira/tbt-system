@@ -44,7 +44,7 @@ module.exports.charge = request => {
 
   // check baggage for synthetic_request=true, and add charged attribute accordingly
   const baggage = propagation.getBaggage(context.active());
-  if (baggage && baggage.getEntry("synthetic_request") && baggage.getEntry("synthetic_request").value === "true") {
+  if (baggage?.getEntry("synthetic_request")?.value === "true") {
     span.setAttribute('app.payment.charged', false);
   } else {
     span.setAttribute('app.payment.charged', true);

@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "semistandard *.js",
-    "start": "node --require ./opentelemetry.js index.js"
+    "start": "node --require ./malabi.js index.js"
   },
   "author": "Jonathan Lui",
   "license": "ISC",
@@ -30,5 +30,8 @@
     "pino": "8.14.2",
     "simple-card-validator": "1.1.0",
     "uuid": "9.0.0"
+  },
+  "devDependencies": {
+    "malabi": "^0.0.7-alpha.1"
   }
 }
