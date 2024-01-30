@@ -1,9 +1,8 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 const express = require('express');
-
+const body = require('body-parser')
 const opentelemetry = require('@opentelemetry/api')
-
 const charge = require('./charge')
 const logger = require('./logger')
 
@@ -13,11 +12,9 @@ async function closeGracefully(signal) {
 }
 
 const app = express();
-app.use(express.json())
+app.use(body.json());
 
-const router = express.Router();
-
-router.get('/health', (req, res) => {
+app.get('/health', (req, res) => {
   const data = {
     uptime: process.uptime(),
     message: 'Ok',
@@ -27,7 +24,7 @@ router.get('/health', (req, res) => {
   res.status(200).send(data);
 });
 
-router.post('/api/v1/pay', (req, res) => {
+app.post('/api/v1/pay', (req, res) => {
   const span = opentelemetry.trace.getActiveSpan();
 
   try {
@@ -52,8 +49,6 @@ router.post('/api/v1/pay', (req, res) => {
     res.status(400).send({ error: err.message })
   }
 });
-
-app.use(router);
 
 const port = Number(process.env.PAYMENT_SERVICE_PORT)
 const server = app.listen(port, () => logger.info("Starting server on port %d", port))
