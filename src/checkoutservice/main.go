@@ -7,13 +7,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+
+	semconv "go.opentelemetry.io/otel/semconv/v1.19.0"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -428,20 +430,77 @@ func (cs *checkoutService) convertCurrency(ctx context.Context, from *pb.Money, 
 	return result, err
 }
 
-func (cs *checkoutService) chargeCard(ctx context.Context, amount *pb.Money, paymentInfo *pb.CreditCardInfo) (string, error) {
-	conn, err := createClient(ctx, cs.paymentSvcAddr)
-	if err != nil {
-		return "", fmt.Errorf("failed to connect payment service: %+v", err)
-	}
-	defer conn.Close()
+type chargeRequest struct {
+	Amount chargeAmount `json:"amount"`
+	CreditCard chargeCreditCard `json:"creditCard"`
+}
 
-	paymentResp, err := pb.NewPaymentServiceClient(conn).Charge(ctx, &pb.ChargeRequest{
-		Amount:     amount,
-		CreditCard: paymentInfo})
-	if err != nil {
-		return "", fmt.Errorf("could not charge the card: %+v", err)
+type chargeAmount struct {
+	CurrencyCode string `json:"currencyCode,omitempty"`
+	Units int64 `json:"units,omitempty"`
+	Nanos int32 `json:"nanos,omitempty"`
+}
+
+type chargeCreditCard struct {
+	CreditCardNumber          string `json:"creditCardNumber,omitempty"`
+	CreditCardCvv             int32  `json:"creditCardCvv,omitempty"`
+	CreditCardExpirationYear  int32  `json:"creditCardExpirationYear,omitempty"`
+	CreditCardExpirationMonth int32  `json:"creditCardExpirationMonth,omitempty"`
+}
+
+type chargeResponse struct {
+	TransactionId string `json:"transactionId"`
+}
+
+func (cs *checkoutService) chargeCard(ctx context.Context, amount *pb.Money, paymentInfo *pb.CreditCardInfo) (string, error) {
+	if amount == nil {
+		amount = &pb.Money{}
 	}
-	return paymentResp.GetTransactionId(), nil
+
+	if paymentInfo == nil {
+		paymentInfo = &pb.CreditCardInfo{}
+	}
+
+	chargePayload := chargeRequest{
+		Amount: chargeAmount{
+			CurrencyCode: amount.CurrencyCode,
+			Units: amount.Units,
+			Nanos: amount.Nanos,
+		},
+		CreditCard: chargeCreditCard{
+			CreditCardNumber: paymentInfo.CreditCardNumber,
+			CreditCardCvv: paymentInfo.CreditCardCvv,
+			CreditCardExpirationYear: paymentInfo.CreditCardExpirationYear,
+			CreditCardExpirationMonth: paymentInfo.CreditCardExpirationMonth,
+		},
+	}
+
+	chargePayloadJson, err := json.Marshal(chargePayload)
+	if  err != nil {
+		return "", fmt.Errorf("failed to marshal charge request to JSON: %+v", err)
+	}
+
+	resp, err := otelhttp.Post(ctx, cs.paymentSvcAddr+"/api/v1/pay", "application/json", bytes.NewBuffer(chargePayloadJson))
+	if err != nil {
+		return "", fmt.Errorf("failed POST to payment service: %+v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed POST to payment service: expected 200, got %d", resp.StatusCode)
+	}
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read payment charge response body: %+v", err)
+	}
+
+	var transaction chargeResponse
+	if err := json.Unmarshal(respBytes, &transaction); err != nil {
+		return "", fmt.Errorf("failed to unmarshal payment charge response: %+v", err)
+	}
+
+	return transaction.TransactionId, nil
 }
 
 func (cs *checkoutService) sendOrderConfirmation(ctx context.Context, email string, order *pb.OrderResult) error {
