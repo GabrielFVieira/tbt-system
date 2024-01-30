@@ -18,7 +18,11 @@ const sdk = new opentelemetry.NodeSDK({
     getNodeAutoInstrumentations({
       // only instrument fs if it is part of another trace
       '@opentelemetry/instrumentation-fs': {
-        requireParentSpan: true,
+        enabled: false,
+        // requireParentSpan: true,
+      },
+      '@opentelemetry/instrumentation-express': {
+        ignoreLayersType: ['router', 'middleware']
       },
     })
   ],
