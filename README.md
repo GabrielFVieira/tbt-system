@@ -16,7 +16,7 @@ A ramificação principal conterá o código original da tag [v1.5.0](https://gi
 
 > **Obs.:** Este projeto não é um fork do repositório original porque não há razão para continuar atualizando-o com novos commits no repositório da comunidade, além disso, como ele se destina a ser usado apenas para o meu cenário específico de TCC, não haverá commits valiosos para sincronizar com o repositório original.
 
-## Cenário 2:
+## Cenário 2 - Malabi:
 
 Esta branch contém o código do objeto de estudo a ser utilizado para o Cenário 2, sendo assim é o código da versão 1.5.0 do OpenTelemetry Demo com alguns defeitos inseridos, conforme descrito no repositório [tbt-tools](https://github.com/GabrielFVieira/tbt-tools).
 
