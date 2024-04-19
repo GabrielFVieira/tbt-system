@@ -1,6 +1,6 @@
 # Trace-Based Testing System
 
-Este repositório contém uma cópia do aplicativo OpenTelemetry Demo, que deve ser usado como objeto de estudo para testar algumas ferramentas de teste baseadas em Trace.
+Este repositório contém uma cópia da aplicação OpenTelemetry Demo, que deve ser usado como objeto de estudo para testar algumas ferramentas de teste baseadas em Trace.
 
 O repositório original pode ser encontrado em: https://github.com/open-telemetry/opentelemetry-demo.
 
